@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { getProducts, getCategories } from "../features/products/services/productService";
+import { getProducts, getCategories, filterProducts } from "../features/products/services/productService";
 import ProductCard from "../features/products/components/ProductCard";
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [totalPagess, setTotalPages] = useState(1);
 
     // Basic state — not wired to filterProducts yet (student task)
     const [search, setSearch] = useState("");
@@ -18,24 +19,24 @@ export default function ProductsPage() {
     useEffect(() => {
         async function load() {
             setLoading(true);
-            // Currently just loads all products — students should use filterProducts()
-            const allProducts = await getProducts();
-            setProducts(allProducts);
+
+            const result = await filterProducts({
+                search: search,
+                category: selectedCategory,
+                sortBy: sortBy,
+                sortOrder: sortOrder,
+                page: currentPage,
+                limit: productsPerPage
+            });
+            setProducts(result.data);
+            setTotalPages(result.totalPages);
+
             const cats = await getCategories();
             setCategories(cats);
-            // Simulate a short loading time so the spinner is visible
-            setTimeout(() => setLoading(false), 600);
+            setLoading(false);
         }
         load();
-    }, []);
-
-    // Basic client-side pagination (not using filterProducts — student task)
-    const startIndex = (currentPage - 1) * productsPerPage;
-    const paginatedProducts = products.slice(
-        startIndex,
-        startIndex + productsPerPage
-    );
-    const totalPages = Math.ceil(products.length / productsPerPage);
+    }, [search, selectedCategory, sortBy, sortOrder, currentPage]);
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -117,13 +118,13 @@ export default function ProductsPage() {
                 <>
                     {/* Product Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                        {paginatedProducts.map((product) => (
+                        {products.map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
                     </div>
 
                     {/* Empty State */}
-                    {paginatedProducts.length === 0 && (
+                    {products.length === 0 && (
                         <div className="text-center py-16">
                             <svg
                                 className="w-16 h-16 text-gray-300 mx-auto mb-4"
@@ -143,7 +144,7 @@ export default function ProductsPage() {
                     )}
 
                     {/* Pagination */}
-                    {totalPages > 1 && (
+                    {totalPagess > 1 && (
                         <div className="flex items-center justify-center gap-2">
                             <button
                                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -152,7 +153,7 @@ export default function ProductsPage() {
                             >
                                 Previous
                             </button>
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                            {Array.from({ length: totalPagess }, (_, i) => i + 1).map(
                                 (pageNum) => (
                                     <button
                                         key={pageNum}
@@ -168,9 +169,9 @@ export default function ProductsPage() {
                             )}
                             <button
                                 onClick={() =>
-                                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                                    setCurrentPage((p) => Math.min(totalPagess, p + 1))
                                 }
-                                disabled={currentPage === totalPages}
+                                disabled={currentPage === totalPagess}
                                 className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
                                 Next
