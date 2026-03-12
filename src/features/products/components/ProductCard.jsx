@@ -5,6 +5,7 @@ import useWishlistStore from "../../wishlist/hooks/useWishlistStore";
 export default function ProductCard({ product }) {
     const addToCart = useCartStore((s) => s.addToCart);
     const addToWishlist = useWishlistStore((s) => s.addToWishlist);
+    const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
     const isInWishlist = useWishlistStore((s) => s.isInWishlist(product.id));
 
     const renderStars = (rating) => {
@@ -65,7 +66,11 @@ export default function ProductCard({ product }) {
                 <button
                     onClick={(e) => {
                         e.preventDefault();
-                        addToWishlist(product);
+                        if (isInWishlist) {
+                            removeFromWishlist(product.id);
+                        } else {
+                            addToWishlist(product);
+                        }
                     }}
                     className={`absolute top-3 right-3 p-2 rounded-full shadow-md transition-all duration-200 ${isInWishlist
                         ? "bg-accent-500 text-white"
