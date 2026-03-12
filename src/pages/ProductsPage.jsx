@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import { getProducts, getCategories, filterProducts } from "../features/products/services/productService";
 import ProductCard from "../features/products/components/ProductCard";
+import { useSearchParams } from "react-router-dom";
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalPagess, setTotalPages] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    // Basic state — not wired to filterProducts yet (student task)
-    const [search, setSearch] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("");
-    const [sortBy, setSortBy] = useState("title");
-    const [sortOrder, setSortOrder] = useState("asc");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [search, setSearch] = useState(searchParams.get("search") || "");
+    const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
+    const [sortBy, setSortBy] = useState(searchParams.get("sortBy") || "title");
+    const [sortOrder, setSortOrder] = useState(searchParams.get("sortOrder") || "asc");
+    const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
     const productsPerPage = 8;
 
     useEffect(() => {
@@ -36,6 +37,18 @@ export default function ProductsPage() {
             setLoading(false);
         }
         load();
+    }, [search, selectedCategory, sortBy, sortOrder, currentPage]);
+
+    useEffect(() => {
+        const params = {};
+
+        if (search) params.search = search;
+        if (selectedCategory) params.category = selectedCategory;
+        if (sortBy !== "title") params.sortBy = sortBy;
+        if (sortOrder !== "asc") params.sortOrder = sortOrder;
+        if (currentPage !== 1) params.page = currentPage;
+
+        setSearchParams(params);
     }, [search, selectedCategory, sortBy, sortOrder, currentPage]);
 
     return (
