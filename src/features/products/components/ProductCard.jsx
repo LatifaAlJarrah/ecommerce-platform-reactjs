@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
 import useCartStore from "../../cart/hooks/useCartStore";
 import useWishlistStore from "../../wishlist/hooks/useWishlistStore";
+import useCompareStore from "../../compare/hooks/useCompareStore";
 
 export default function ProductCard({ product }) {
     const addToCart = useCartStore((s) => s.addToCart);
     const addToWishlist = useWishlistStore((s) => s.addToWishlist);
     const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
     const isInWishlist = useWishlistStore((s) => s.isInWishlist(product.id));
+    const addToCompare = useCompareStore((s) => s.addToCompare);
+    const removeFromCompare = useCompareStore((s) => s.removeFromCompare);
+    const isInCompare = useCompareStore((s) => s.isInCompare(product.id));
 
     const renderStars = (rating) => {
         const stars = [];
@@ -81,6 +85,30 @@ export default function ProductCard({ product }) {
                         <path
                             fillRule="evenodd"
                             d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </button>
+                {/* Add to Compare button */}
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        if (isInCompare) {
+                            removeFromCompare(product.id);
+                        } else {
+                            addToCompare(product);
+                        }
+                    }}
+                    className={`absolute top-3 left-3 p-2 rounded-full shadow-md transition-all duration-200 ${isInCompare
+                        ? "bg-accent-500 text-white"
+                        : "bg-white/90 text-gray-400 hover:text-accent-500"
+                        }`}
+                    title={isInCompare ? "Remove from compare" : "Add to compare"}
+                >
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20" aria-hidden="true">
+                        <path
+                            fillRule="evenodd"
+                            d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z"
                             clipRule="evenodd"
                         />
                     </svg>

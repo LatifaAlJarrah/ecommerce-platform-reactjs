@@ -1,10 +1,32 @@
 import { useState, useEffect } from "react";
 import { getProducts } from "../features/products/services/productService";
+import useCompareStore from "../features/compare/hooks/useCompareStore";
 
 export default function ComparePage() {
     const [products, setProducts] = useState([]);
-    const [selectedProductA, setSelectedProductA] = useState("");
-    const [selectedProductB, setSelectedProductB] = useState("");
+    const compareItems = useCompareStore((s) => s.items);
+    const setCompareSlot = useCompareStore((s) => s.setCompareSlot);
+    const clearCompareSlot = useCompareStore((s) => s.clearCompareSlot);
+
+    const selectedProductA = compareItems[0]?.id?.toString() ?? "";
+    const selectedProductB = compareItems[1]?.id?.toString() ?? "";
+
+    const setSelectedProductA = (value) => {
+        if (!value) {
+            clearCompareSlot(0);
+            return;
+        }
+        const product = products.find((p) => p.id === Number(value));
+        if (product) setCompareSlot(0, product);
+    };
+    const setSelectedProductB = (value) => {
+        if (!value) {
+            clearCompareSlot(1);
+            return;
+        }
+        const product = products.find((p) => p.id === Number(value));
+        if (product) setCompareSlot(1, product);
+    };
 
     useEffect(() => {
         async function load() {
@@ -14,15 +36,14 @@ export default function ComparePage() {
         load();
     }, []);
 
-    // Comparison logic not implemented — student task
-    const productA = products.find((p) => p.id === Number(selectedProductA));
-    const productB = products.find((p) => p.id === Number(selectedProductB));
+    const productA = compareItems[0] || (selectedProductA ? products.find((p) => p.id === Number(selectedProductA)) : null);
+    const productB = compareItems[1] || (selectedProductB ? products.find((p) => p.id === Number(selectedProductB)) : null);
 
     const comparisonFields = [
-        { label: "Price", key: "price", format: (v) => `$${v?.toFixed(2) || "—"}` },
+        { label: "Price", key: "price", better: "lower", worest: "higher", format: (v) => `$${v?.toFixed(2) || "—"}` },
         { label: "Category", key: "category", format: (v) => v || "—" },
-        { label: "Rating", key: "rating", format: (v) => (v ? `${v} / 5` : "—") },
-        { label: "Stock", key: "stock", format: (v) => (v != null ? `${v} units` : "—") },
+        { label: "Rating", key: "rating", better: "higher", worest: "lower", format: (v) => (v ? `${v} / 5` : "—") },
+        { label: "Stock", key: "stock", better: "higher", worest: "lower", format: (v) => (v != null ? `${v} units` : "—") },
     ];
 
     return (
@@ -119,22 +140,52 @@ export default function ComparePage() {
                     </div>
 
                     {/* Comparison Rows */}
-                    {comparisonFields.map((field) => (
-                        <div
+                    {comparisonFields.map((field) => {
+                        const valueA = productA?.[field.key];
+                        const valueB = productB?.[field.key];
+
+                        let best, worst;
+
+                        if (field.better === "lower") {
+                            best = Math.min(valueA ?? Infinity, valueB ?? Infinity);
+                                worst = Math.max(valueA ?? -Infinity, valueB ?? -Infinity);
+
+                        } else if (field.better === "higher") {
+                            best = Math.max(valueA ?? -Infinity, valueB ?? -Infinity);
+                                worst = Math.min(valueA ?? Infinity, valueB ?? Infinity);
+
+                        }
+                       
+
+                        return (
+                            <div
                             key={field.key}
                             className="grid grid-cols-3 border-b border-gray-50 last:border-0"
-                        >
+                            >
                             <div className="p-4 bg-gray-50 text-sm font-medium text-gray-600">
                                 {field.label}
                             </div>
-                            <div className="p-4 text-center text-sm text-gray-800 border-l border-gray-100">
-                                {productA ? field.format(productA[field.key]) : "—"}
+
+                            {/* Product A */}
+                            <div
+                                className={`p-4 text-center text-sm border-l border-gray-100 ${
+                                valueA === best ? "text-green-600 font-semibold" : valueA === worst ? "text-red-500" : "text-gray-800"
+                                }`}
+                            >
+                                {productA ? field.format(valueA) : "—"}
                             </div>
-                            <div className="p-4 text-center text-sm text-gray-800 border-l border-gray-100">
-                                {productB ? field.format(productB[field.key]) : "—"}
+
+                            {/* Product B */}
+                            <div
+                                className={`p-4 text-center text-sm border-l border-gray-100 ${
+                                valueB === best ? "text-green-600 font-semibold" : valueB === worst ? "text-red-500" : "text-gray-800"
+                                }`}
+                            >
+                                {productB ? field.format(valueB) : "—"}
                             </div>
-                        </div>
-                    ))}
+                            </div>
+                        );
+                    })}
 
                     {/* Description */}
                     <div className="grid grid-cols-3 border-t border-gray-100">

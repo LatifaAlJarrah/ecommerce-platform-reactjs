@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { getProductById } from "../features/products/services/productService";
 import useCartStore from "../features/cart/hooks/useCartStore";
 import useWishlistStore from "../features/wishlist/hooks/useWishlistStore";
+import useCompareStore from "../features/compare/hooks/useCompareStore";
 
 export default function ProductDetailsPage() {
     const { id } = useParams();
@@ -11,7 +12,11 @@ export default function ProductDetailsPage() {
     const [countdown, setCountdown] = useState(null);
     const addToCart = useCartStore((s) => s.addToCart);
     const addToWishlist = useWishlistStore((s) => s.addToWishlist);
+    const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
     const isInWishlist = useWishlistStore((s) => s.isInWishlist(Number(id)));
+    const addToCompare = useCompareStore((s) => s.addToCompare);
+    const removeFromCompare = useCompareStore((s) => s.removeFromCompare);
+    const isInCompare = useCompareStore((s) => s.isInCompare(Number(id)));
 
     useEffect(() => {
         async function load() {
@@ -217,16 +222,37 @@ export default function ProductDetailsPage() {
                             Add to Cart
                         </button>
                         <button
-                            onClick={() => addToWishlist(product)}
+                            onClick={() =>
+                                isInWishlist ? removeFromWishlist(product.id) : addToWishlist(product)
+                            }
                             className={`px-4 py-3.5 rounded-xl border-2 transition-all ${isInWishlist
                                 ? "border-accent-500 bg-accent-50 text-accent-500"
                                 : "border-gray-200 text-gray-400 hover:border-accent-300 hover:text-accent-500"
                                 }`}
+                            title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                         >
                             <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
                                 <path
                                     fillRule="evenodd"
                                     d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={() =>
+                                isInCompare ? removeFromCompare(product.id) : addToCompare(product)
+                            }
+                            className={`px-4 py-3.5 rounded-xl border-2 transition-all ${isInCompare
+                                ? "border-accent-500 bg-accent-50 text-accent-500"
+                                : "border-gray-200 text-gray-400 hover:border-accent-300 hover:text-accent-500"
+                                }`}
+                            title={isInCompare ? "Remove from compare" : "Add to compare"}
+                        >
+                            <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20" aria-hidden="true">
+                                <path
+                                    fillRule="evenodd"
+                                    d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z"
                                     clipRule="evenodd"
                                 />
                             </svg>
