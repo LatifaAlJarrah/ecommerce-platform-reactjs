@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import useCartStore from "../../cart/hooks/useCartStore";
 import useWishlistStore from "../../wishlist/hooks/useWishlistStore";
 import useCompareStore from "../../compare/hooks/useCompareStore";
@@ -72,8 +73,12 @@ export default function ProductCard({ product }) {
                         e.preventDefault();
                         if (isInWishlist) {
                             removeFromWishlist(product.id);
+                            toast("Removed from wishlist", {
+                                icon: "♥",
+                            });
                         } else {
                             addToWishlist(product);
+                            toast.success("Added to wishlist");
                         }
                     }}
                     className={`absolute top-3 right-3 p-2 rounded-full shadow-md transition-all duration-200 ${isInWishlist
@@ -95,8 +100,10 @@ export default function ProductCard({ product }) {
                         e.preventDefault();
                         if (isInCompare) {
                             removeFromCompare(product.id);
+                            toast("Removed from compare");
                         } else {
                             addToCompare(product);
+                            toast.success("Added to compare list");
                         }
                     }}
                     className={`absolute top-3 left-3 p-2 rounded-full shadow-md transition-all duration-200 ${isInCompare
@@ -137,7 +144,10 @@ export default function ProductCard({ product }) {
                         ${product.price.toFixed(2)}
                     </span>
                     <button
-                        onClick={() => addToCart(product)}
+                        onClick={() => {
+                            addToCart(product);
+                            toast.success("Added to cart");
+                        }}
                         disabled={product.stock === 0}
                         className="px-3 py-1.5 bg-primary-600 text-white text-xs font-medium rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                     >
