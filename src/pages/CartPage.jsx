@@ -121,7 +121,8 @@ export default function CartPage() {
                                             onClick={() =>
                                                 updateQuantity(item.id, item.quantity - 1)
                                             }
-                                            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary-600 transition-colors"
+                                            disabled={item.quantity <= 1}
+                                            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary-600 transition-colors disabled:text-gray-300 disabled:cursor-not-allowed"
                                         >
                                             −
                                         </button>

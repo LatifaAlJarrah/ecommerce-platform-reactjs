@@ -30,18 +30,15 @@ const useCartStore = create((set, get) => ({
         });
     },
 
-    // BUG: This function does NOT prevent quantity from going to 0 or negative.
-    // Students must fix this by adding a minimum quantity check (quantity >= 1).
     updateQuantity: (productId, newQuantity) => {
         const items = get().items;
         const item = items.find((i) => i.id === productId);
 
         if (!item) return;
 
-        // Prevent exceeding stock
+        if (newQuantity < 1) return;
         if (newQuantity > item.stock) return;
 
-        // BUG: No check for newQuantity <= 0
         set({
             items: items.map((i) =>
                 i.id === productId ? { ...i, quantity: newQuantity } : i
