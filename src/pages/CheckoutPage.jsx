@@ -17,22 +17,79 @@ export default function CheckoutPage() {
         zipCode: "",
         country: "",
     });
+    const [errors, setErrors] = useState({});
+    const [submitted, setSubmitted] = useState(false);
+    const [touched, setTouched] = useState({});
 
     const totalPrice = items.reduce(
         (sum, item) => sum + item.price * item.quantity,
         0
     );
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+    const validateForm = (values) => {
+        const errs = {};
+        const trimmed = (v) => (typeof v === "string" ? v.trim() : v);
+
+        if (!trimmed(values.firstName)) errs.firstName = "First name is required";
+        else if (trimmed(values.firstName).length < 2) errs.firstName = "At least 2 characters";
+
+        if (!trimmed(values.lastName)) errs.lastName = "Last name is required";
+        else if (trimmed(values.lastName).length < 2) errs.lastName = "At least 2 characters";
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!trimmed(values.email)) errs.email = "Email is required";
+        else if (!emailRegex.test(trimmed(values.email))) errs.email = "Enter a valid email";
+
+        // Phone: accept digits, spaces, dashes, parentheses, + prefix
+        const phone = (values.phone || "").trim();
+        const phoneAllowedRegex = /^\+?[\d\s\-()]+$/;
+        const phoneDigits = phone.replace(/\D/g, "");
+        if (!phone.length) errs.phone = "Phone is required";
+        else if (!phoneAllowedRegex.test(phone)) errs.phone = "Use only digits, spaces, dashes, parentheses, and +";
+        else if (phoneDigits.length < 10) errs.phone = "Enter a valid phone number (at least 10 digits)";
+
+        if (!trimmed(values.address)) errs.address = "Address is required";
+        else if (trimmed(values.address).length < 5) errs.address = "Enter a full address";
+
+        if (!trimmed(values.city)) errs.city = "City is required";
+
+        if (!trimmed(values.zipCode)) errs.zipCode = "ZIP code is required";
+        else if (!/^[\w\s-]{3,12}$/.test(trimmed(values.zipCode))) errs.zipCode = "Enter a valid ZIP code";
+
+        if (!trimmed(values.country)) errs.country = "Please select a country";
+
+        return errs;
     };
 
-    // No validation implemented — student task
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleBlur = (e) => {
+        const { name, value } = e.target;
+        setTouched((prev) => ({ ...prev, [name]: true }));
+        const valuesForValidation = { ...form, [name]: value };
+        const nextErrors = validateForm(valuesForValidation);
+        setErrors((prev) => ({ ...prev, [name]: nextErrors[name] ?? "" }));
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
+        setSubmitted(true);
+        const nextErrors = validateForm(form);
+        setErrors(nextErrors);
+        if (Object.keys(nextErrors).length > 0) return;
         clearCart();
         setOrderPlaced(true);
     };
+
+    const showError = (field) => (submitted || touched[field]) && errors[field];
+
+    const inputClass = (field) =>
+        `w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white ${
+            showError(field) ? "border-red-500" : "border-gray-200"
+        }`;
 
     if (orderPlaced) {
         return (
@@ -115,9 +172,13 @@ export default function CheckoutPage() {
                                         name="firstName"
                                         value={form.firstName}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                        onBlur={handleBlur}
+                                        className={inputClass("firstName")}
                                         placeholder="John"
                                     />
+                                    {showError("firstName") && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -128,9 +189,13 @@ export default function CheckoutPage() {
                                         name="lastName"
                                         value={form.lastName}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                        onBlur={handleBlur}
+                                        className={inputClass("lastName")}
                                         placeholder="Doe"
                                     />
+                                    {showError("lastName") && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.lastName}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -141,9 +206,13 @@ export default function CheckoutPage() {
                                         name="email"
                                         value={form.email}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                        onBlur={handleBlur}
+                                        className={inputClass("email")}
                                         placeholder="john@example.com"
                                     />
+                                    {showError("email") && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -154,9 +223,13 @@ export default function CheckoutPage() {
                                         name="phone"
                                         value={form.phone}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                        onBlur={handleBlur}
+                                        className={inputClass("phone")}
                                         placeholder="+1 (555) 000-0000"
                                     />
+                                    {showError("phone") && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+                                    )}
                                 </div>
                                 <div className="sm:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -167,9 +240,13 @@ export default function CheckoutPage() {
                                         name="address"
                                         value={form.address}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                        onBlur={handleBlur}
+                                        className={inputClass("address")}
                                         placeholder="123 Main Street"
                                     />
+                                    {showError("address") && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.address}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -180,9 +257,13 @@ export default function CheckoutPage() {
                                         name="city"
                                         value={form.city}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                        onBlur={handleBlur}
+                                        className={inputClass("city")}
                                         placeholder="New York"
                                     />
+                                    {showError("city") && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.city}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -193,9 +274,13 @@ export default function CheckoutPage() {
                                         name="zipCode"
                                         value={form.zipCode}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                        onBlur={handleBlur}
+                                        className={inputClass("zipCode")}
                                         placeholder="10001"
                                     />
+                                    {showError("zipCode") && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.zipCode}</p>
+                                    )}
                                 </div>
                                 <div className="sm:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -205,7 +290,8 @@ export default function CheckoutPage() {
                                         name="country"
                                         value={form.country}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+                                        onBlur={handleBlur}
+                                        className={inputClass("country")}
                                     >
                                         <option value="">Select country</option>
                                         <option value="US">United States</option>
@@ -215,6 +301,9 @@ export default function CheckoutPage() {
                                         <option value="FR">France</option>
                                         <option value="AU">Australia</option>
                                     </select>
+                                    {showError("country") && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.country}</p>
+                                    )}
                                 </div>
                             </div>
                         </div>

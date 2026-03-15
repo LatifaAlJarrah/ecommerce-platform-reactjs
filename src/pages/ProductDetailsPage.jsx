@@ -5,6 +5,7 @@ import useCartStore from "../features/cart/hooks/useCartStore";
 import useWishlistStore from "../features/wishlist/hooks/useWishlistStore";
 import useCompareStore from "../features/compare/hooks/useCompareStore";
 
+
 export default function ProductDetailsPage() {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
