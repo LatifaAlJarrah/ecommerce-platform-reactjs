@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getProductById } from "../features/products/services/productService";
+import { getProductById, getReviewsByProductId } from "../features/products/services/productService";
 import useCartStore from "../features/cart/hooks/useCartStore";
 import useWishlistStore from "../features/wishlist/hooks/useWishlistStore";
 import useCompareStore from "../features/compare/hooks/useCompareStore";
@@ -9,6 +9,8 @@ export default function ProductDetailsPage() {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
     const [countdown, setCountdown] = useState(null);
     const addToCart = useCartStore((s) => s.addToCart);
     const addToWishlist = useWishlistStore((s) => s.addToWishlist);
@@ -26,6 +28,17 @@ export default function ProductDetailsPage() {
             setLoading(false);
         }
         load();
+    }, [id]);
+
+    useEffect(() => {
+        if (!id) return;
+        async function loadReviews() {
+            setReviewsLoading(true);
+            const list = await getReviewsByProductId(id);
+            setReviews(list);
+            setReviewsLoading(false);
+        }
+        loadReviews();
     }, [id]);
 
     useEffect(() => {
@@ -259,16 +272,55 @@ export default function ProductDetailsPage() {
                         </button>
                     </div>
 
-                    {/* Reviews Placeholder — Student task to implement */}
+                    {/* Customer Reviews */}
                     <div className="mt-10 border-t border-gray-100 pt-8">
                         <h3 className="text-xl font-bold text-gray-900 mb-4">
                             Customer Reviews
+                            {reviews.length > 0 && (
+                                <span className="text-sm font-normal text-gray-500 ml-2">
+                                    ({reviews.length})
+                                </span>
+                            )}
                         </h3>
-                        <div className="bg-gray-50 rounded-xl p-6 text-center">
-                            <p className="text-gray-400 text-sm">
-                                Reviews will be displayed here.
-                            </p>
-                        </div>
+                        {reviewsLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="w-8 h-8 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+                            </div>
+                        ) : reviews.length === 0 ? (
+                            <div className="bg-gray-50 rounded-xl p-6 text-center">
+                                <p className="text-gray-400 text-sm">
+                                    No reviews yet. Be the first to leave a review!
+                                </p>
+                            </div>
+                        ) : (
+                            <ul className="space-y-4">
+                                {reviews.map((review) => (
+                                    <li
+                                        key={review.id}
+                                        className="bg-gray-50 rounded-xl p-4 border border-gray-100"
+                                    >
+                                        <div className="flex items-center justify-between gap-2 mb-2">
+                                            <span className="font-medium text-gray-900">
+                                                {review.user}
+                                            </span>
+                                            <span className="text-sm text-gray-500">
+                                                {new Date(review.date).toLocaleDateString("en-US", {
+                                                    year: "numeric",
+                                                    month: "short",
+                                                    day: "numeric",
+                                                })}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1 mb-2">
+                                            {renderStars(review.rating)}
+                                        </div>
+                                        <p className="text-gray-600 text-sm leading-relaxed">
+                                            {review.comment}
+                                        </p>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 </div>
             </div>
